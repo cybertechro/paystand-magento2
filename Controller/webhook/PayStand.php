@@ -10,6 +10,7 @@ use Magento\Framework\App\Action\HttpPostActionInterface as HttpPostActionInterf
 use Magento\Sales\Model\Order\Payment\Transaction\BuilderInterface as BuilderInterface;
 use Magento\Sales\Model\Order;
 
+
 /**
  * Webhook Receiver Controller for Paystand
  */
@@ -24,6 +25,7 @@ class Paystand extends \Magento\Framework\App\Action\Action implements HttpPostA
     const USE_SANDBOX = 'payment/paystandmagento/use_sandbox';
     const SANDBOX_BASE_URL = 'https://api.paystand.co/v3';
     const BASE_URL = 'https://api.paystand.com/v3';
+    
     const STORE_SCOPE = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
 
     /** @var \Psr\Log\LoggerInterface */
@@ -67,7 +69,8 @@ class Paystand extends \Magento\Framework\App\Action\Action implements HttpPostA
         \Magento\Sales\Model\Service\InvoiceService $invoiceService,
         \Magento\Framework\DB\TransactionFactory $transactionFactory,
         \Magento\Sales\Api\InvoiceRepositoryInterface $invoiceRepository,
-        \Magento\Sales\Api\OrderRepositoryInterface $orderRepository
+        \Magento\Sales\Api\OrderRepositoryInterface $orderRepository,
+        \Magento\Sales\Model\Order\Email\Sender\InvoiceSender $invoiceSender
     ) {
         $this->_logger = $logger;
         $this->_request = $request;
@@ -82,6 +85,7 @@ class Paystand extends \Magento\Framework\App\Action\Action implements HttpPostA
         $this->_transactionFactory = $transactionFactory;
         $this->_invoiceRepository = $invoiceRepository;
         $this->_orderRepository = $orderRepository;
+        $this->_invoiceSender = $invoiceSender;
         parent::__construct($context);
     }
 
@@ -184,12 +188,14 @@ class Paystand extends \Magento\Framework\App\Action\Action implements HttpPostA
             // Decode the body
             $request = json_decode($body, true);
 
+            $order->addStatusHistoryComment('Paystand confirmed paid #' .  $order->getIncrementId());
+
             // Create Transaction & invoice for the Order
             $this->createTransaction($order,$request['resource']);
             $this->createInvoice($order);
 
-        // If it's in created or processing
-        } elseif (in_array($json->resource->status, ['created', 'processing'])) {
+        // If it's in created or processing or posted then discard
+        } elseif (in_array($json->resource->status, ['created', 'processing', 'posted'])) {
 
             $this->_logger->debug('>>>>> PAYSTAND-FINISH: payment created, processing or paid, no need to update order');
             $result->setHttpResponseCode(\Magento\Framework\Webapi\Response::HTTP_OK);
@@ -212,7 +218,6 @@ class Paystand extends \Magento\Framework\App\Action\Action implements HttpPostA
             $order->save();
 
         }
-
 
         // Finish and send back success response
         $this->_logger->debug(
@@ -419,7 +424,9 @@ class Paystand extends \Magento\Framework\App\Action\Action implements HttpPostA
     private function createInvoice($order)
     {
         try {
+
             $this->_logger->debug('>>>>> PAYSTAND-CREATE-INVOICE-START');
+
             if ($order) {
                 $invoices = $this->_invoiceCollectionFactory->create()
                     ->addAttributeToFilter('order_id', ['eq' => $order->getId()]);
@@ -442,6 +449,9 @@ class Paystand extends \Magento\Framework\App\Action\Action implements HttpPostA
 
                 $invoice->getOrder()->setCustomerNoteNotify(false);
                 $invoice->getOrder()->setIsInProcess(true);
+
+                // Send email for invoice
+                $this->_invoiceSender->send($invoice);
 
                 // To talkative
                 //$order->addStatusHistoryComment(__('Invoice ' . $invoice->getId() . ' created'), false);
