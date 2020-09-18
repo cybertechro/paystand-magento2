@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Email:etc/email_templates.xsd">
+    <template id="paystand_email_confirm" label="Paystand Email Confirm" file="order-confirm.html" type="html" module="PayStand_PayStandMagento" area="frontend"/>
+    <template id="paystand_email_reject"  label="Paystand Email Reject" file="order-reject.html" type="html" module="PayStand_PayStandMagento" area="frontend"/>
+</config>

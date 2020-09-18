@@ -70,7 +70,8 @@ class Paystand extends \Magento\Framework\App\Action\Action implements HttpPostA
         \Magento\Framework\DB\TransactionFactory $transactionFactory,
         \Magento\Sales\Api\InvoiceRepositoryInterface $invoiceRepository,
         \Magento\Sales\Api\OrderRepositoryInterface $orderRepository,
-        \Magento\Sales\Model\Order\Email\Sender\InvoiceSender $invoiceSender
+        \Magento\Sales\Model\Order\Email\Sender\InvoiceSender $invoiceSender,
+        \PayStand\PayStandMagento\Plugin\OrderConfirmEmail $orderConfirmEmail
     ) {
         $this->_logger = $logger;
         $this->_request = $request;
@@ -86,6 +87,7 @@ class Paystand extends \Magento\Framework\App\Action\Action implements HttpPostA
         $this->_invoiceRepository = $invoiceRepository;
         $this->_orderRepository = $orderRepository;
         $this->_invoiceSender = $invoiceSender;
+        $this->_orderConfirmEmail = $orderConfirmEmail;
         parent::__construct($context);
     }
 
@@ -150,10 +152,11 @@ class Paystand extends \Magento\Framework\App\Action\Action implements HttpPostA
         // Get current order statuses
         $state = $order->getState();
         $status = $order->getStatus();
+        $remote_status = $json->resource->status ? $json->resource->status : null;
 
         $this->_logger->debug(
-            '>>>>> PAYSTAND-ORDER: current order id: "' . $order->getIncrementId()
-                . '", current order state: "' . $state . '", current order status: "' . $status . '"'
+            ">>>>> [LC: $remote_status] PAYSTAND-ORDER: current order id: {$order->getIncrementId()}, 
+            current order state: $state,  current order status: $status"
         );
 
         // Get an access_token from Paystand using CLIENT_ID & CLIENT_SECRET
@@ -182,17 +185,33 @@ class Paystand extends \Magento\Framework\App\Action\Action implements HttpPostA
             return $result;
         }
 
+        // Skip closed or canceled orders. Those states are final
+        if(in_array($status, [Order::STATE_CLOSED, Order::STATE_CANCELED])){
+            $this->_logger->debug('>>>>> PAYSTAND-EVENT-SKIP: Order is closed or canceled');
+            $result->setHttpResponseCode(\Magento\Framework\Webapi\Response::HTTP_OK);
+            $result->setData(['success_message' => __('Event verified, not a payment, no further action')]);
+            return $result;
+        }
+
         // Only create transaction and invoice when the payment is on paid status to prevent multiple objects
         if (in_array($json->resource->status, ['paid'])) {
 
             // Decode the body
             $request = json_decode($body, true);
 
-            $order->addStatusHistoryComment('Paystand confirmed paid #' .  $order->getIncrementId());
+            $order->addStatusHistoryComment('Paystand confirmed paid #' .  $order->getIncrementId())
+                  ->setIsVisibleOnFront(true)
+                  ->setIsCustomerNotified(true)
+                  ->save();
+
+            // $order->queueOrderUpdateEmail(true, 'Paystand confirmed paid #' .  $order->getIncrementId(), true);
 
             // Create Transaction & invoice for the Order
             $this->createTransaction($order,$request['resource']);
             $this->createInvoice($order);
+
+            // Send order confirmation email
+            $this->_orderConfirmEmail->sendEmail($order, \PayStand\PayStandMagento\Plugin\OrderConfirmEmail::ORDER_CONFIRM_TEMPLATE);
 
         // If it's in created or processing or posted then discard
         } elseif (in_array($json->resource->status, ['created', 'processing', 'posted'])) {
@@ -208,8 +227,9 @@ class Paystand extends \Magento\Framework\App\Action\Action implements HttpPostA
 
             $order->addStatusHistoryComment('Paystand payment ' . $json->resource->status, $newStatus);
             $order->setState($newStatus);
-
             $order->save();
+
+            $this->_orderConfirmEmail->sendEmail($order, \PayStand\PayStandMagento\Plugin\OrderConfirmEmail::ORDER_REJECT_TEMPLATE);
 
         } else {
 

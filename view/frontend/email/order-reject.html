@@ -1,0 +1,21 @@
+<!--@subject {{trans "Payment for order #"}}{{var orderId}}{{trans " has been rejected"}} @-->
+
+{{template config_path="design/email/header_template"}}
+
+<table>
+    <tr class="email-intro">
+        <td>
+            <div>
+                Dear {{var customerName}}
+                <h3 style="font-size:22px; font-weight:normal; line-height:28px; margin:8px 0 10px 0">
+                    Your payment for order #{{var orderId}} has been <b>rejected</b>.
+                </h3>
+                We will review it and process your order if the form is completed correctly.
+                Our sales team will keep you informed of further progress.
+            </div>
+            <br />
+        </td>
+    </tr>
+</table>
+
+{{template config_path="design/email/footer_template"}}
