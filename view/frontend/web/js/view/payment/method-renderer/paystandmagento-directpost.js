@@ -19,8 +19,8 @@ define(
         checkoutjs_module,
     ],
     function ($, Component, quote, agreementValidator, paystand) {
-        'use strict';
 
+        'use strict';
 
         const loadPaystandCheckout = function () {
 
@@ -60,12 +60,17 @@ define(
         };
 
         const initCheckout = function (checkoutData) {
+
             let config = {
                 "publishableKey": checkoutData.publishable_key,
                 "paymentAmount": checkoutData.price,
                 "fixedAmount": true,
                 "viewReceipt": "close",
                 "viewCheckout": "mobile",
+                "viewFunds": "card,ach,bank",
+                "viewLogo": "hide",
+                "viewSecure": "hide",
+                "headerColor": "#1c629e",
                 "paymentCurrency": "USD",
                 "payerName": checkoutData.billing.firstname + ' ' + checkoutData.billing.lastname,
                 "payerEmail": quote.guestEmail,
@@ -111,12 +116,13 @@ define(
                 $(".ps-button").click();
             }
         }
-        
+
         psCheckout.onComplete(function (data) {
             $(".submit-trigger").click();
         });
 
         return Component.extend({
+
             defaults: {
                 template: 'PayStand_PayStandMagento/payment/paystandmagento-directpost'
             },

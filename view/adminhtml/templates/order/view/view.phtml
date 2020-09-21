@@ -1,0 +1,19 @@
+<?php
+/**
+* @var $block \PayStand\PayStandMagento\Block\Order\View\View;
+*/
+?>
+
+<div class="admin__page-section-item" style="width: calc((100%)*.5 - 30px); margin-bottom: 15px">
+   <h3 class="admin__page-section-item-title">Paystand Payment Information</h3>
+   <table class="data-table admin__table-secondary">
+      <tbody>
+         <?php foreach( $block->getOrderInfoTable() as $key => $value ): ?>
+            <tr>
+               <th><?=ucwords(implode(' ',preg_split('/(?=[A-Z])/', $key)))?></th>
+               <td><?=$value?></td>
+            </tr>
+         <?php endforeach; ?>
+      </tbody>
+   </table>
+</div>
