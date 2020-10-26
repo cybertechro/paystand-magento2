@@ -16,7 +16,9 @@ define(
                 component: 'PayStand_PayStandMagento/js/view/payment/method-renderer/paystandmagento-directpost'
             }
         );
+        
         /** Add view logic here if needed */
         return Component.extend({});
+
     }
 );

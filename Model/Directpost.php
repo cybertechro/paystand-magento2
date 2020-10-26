@@ -12,6 +12,18 @@ class Directpost extends \Magento\Payment\Model\Method\AbstractMethod
      * @var string
      */
     protected $_code = 'paystandmagento'; // Not worth it creating a constructor to just assign $_code to METHOD_CODE
+    
+    /**
+     * @var string
+     */
+    protected $_formBlockType = 'PayStand\PayStandMagento\Block\Form';
+    
+    /**
+     * Info instructions block path
+     *
+     * @var string
+     */
+    protected $_infoBlockType = 'Magento\Payment\Block\Info\Instructions';
 
     /**
      * Availability option

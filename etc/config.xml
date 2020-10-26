@@ -20,6 +20,7 @@
                 <!--<allowspecific>0</allowspecific>-->
                 <!--<currency>USD</currency>-->
                 <create_order_before>1</create_order_before>
+                <can_use_internal>1</can_use_internal>
                 <!--<date_delim>/</date_delim>-->
             </paystandmagento>
         </payment>
