@@ -1,0 +1,8 @@
+<body>
+    <referenceBlock name="order.create.billing.method.form">
+        <action method="setMethodFormTemplate">
+            <argument name="method" xsi:type="string">paystandmagento</argument>
+            <argument name="template" xsi:type="string">PayStand_PayStandMagento::form/cc.phtml</argument>
+        </action>
+    </referenceBlock>
+</body>

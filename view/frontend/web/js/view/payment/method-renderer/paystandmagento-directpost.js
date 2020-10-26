@@ -3,6 +3,7 @@ var core_domain = 'paystand.com';
 var api_domain = 'api.paystand.com';
 var checkout_domain = 'checkout.paystand.com';
 var use_sandbox = window.checkoutConfig.payment.paystandmagento.use_sandbox;
+
 if (use_sandbox == '1') {
     checkoutjs_module = 'paystand-sandbox';
     core_domain = 'paystand.co';
