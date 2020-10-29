@@ -8,7 +8,7 @@ define([
 
     jQuery(document).ready(function(){
 
-        console.log("price",$(".order-tables > .price").html());
+        //console.log("price",$(".order-tables > .price").html());
         //Custom js here
 
     });

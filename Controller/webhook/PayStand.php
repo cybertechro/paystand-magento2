@@ -116,7 +116,10 @@ class Paystand extends \Magento\Framework\App\Action\Action implements HttpPostA
         $this->_logger->debug(">>>>> PAYSTAND-REQUEST-RECEIVED: " . json_encode($json));
 
         // Verify the received event is a Paystand-Magento request
-        if (!isset($json->resource->meta->source) || ($json->resource->meta->source != "magento 2")) {
+        if (
+            !isset($json->resource->meta->source) || 
+            !in_array($json->resource->meta->source, ["magento 2", "magento 2 - admin"])
+        ) {
             $this->_logger->debug('>>>>> PAYSTAND-FINISH: not a Paystand-Magento request');
             $result->setHttpResponseCode(\Magento\Framework\Webapi\Response::HTTP_OK);
             $result->setData(['success_message' => __('Event finished: Not a Paystand-Magento request')]);

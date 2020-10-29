@@ -35,6 +35,7 @@ $config = $block->getConfig();
 
     require(
         ['jquery', '<?=$block->sandbox('paystand-sandbox','paystand')?>', 'paystand-admin'],
+
         function($, paystand, paystand_admin) {
 
             function onClick(checkout){
@@ -51,9 +52,10 @@ $config = $block->getConfig();
                         initCheckout(checkout);
                     },
                     error: function (error) {
-                        console.log('Unable to get ISO3 code from PayStand!');
+                        console.error('Unable to get ISO3 code from PayStand!');
                     },
                 });
+
             }
 
             function initCheckout(checkout){
@@ -71,7 +73,7 @@ $config = $block->getConfig();
                     "paymentMeta": {
                         "source": "magento 2 - admin",
                         "quote": checkout.quoteId,
-                        "quoteDetails": ["12"]
+                        "quoteDetails": null
                     }
                 };
 
