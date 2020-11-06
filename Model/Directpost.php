@@ -4,6 +4,7 @@ namespace PayStand\PayStandMagento\Model;
 
 class Directpost extends \Magento\Payment\Model\Method\AbstractMethod
 {
+    
     const METHOD_CODE = 'paystandmagento';
 
     /**
@@ -32,6 +33,7 @@ class Directpost extends \Magento\Payment\Model\Method\AbstractMethod
      */
     protected $_isOffline = false;
 
+
     /**
      * Check whether there are CC types set in configuration
      *
@@ -43,4 +45,54 @@ class Directpost extends \Magento\Payment\Model\Method\AbstractMethod
         return parent::isAvailable($quote)
         && $this->getConfigData('publishable_key', $quote ? $quote->getStoreId() : null);
     }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function canRefund()
+    {
+        return true;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function canRefundPartialPerInvoice()
+    {
+        return true;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function canVoid()
+    {
+        return true;
+    }
+
+
+    /**
+     * {@inheritdoc}
+     */
+    public function canEdit()
+    {
+        return true;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function canFetchTransactionInfo()
+    {
+        return true;
+    }
+  
+    /**
+     * {@inheritdoc}
+     */
+    public function isOffline()
+    {
+        return true;
+    }
+
 }

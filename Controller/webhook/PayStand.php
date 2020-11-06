@@ -496,7 +496,7 @@ class Paystand extends \Magento\Framework\App\Action\Action implements HttpPostA
                     ->create()
                     ->addObject($invoice)
                     ->addObject($invoice->getOrder());
-
+                
                 $transactionSave->save();
 
                 $this->_logger->debug('>>>>> PAYSTAND-CREATE-INVOICE-FINISH: invoiceId: ' . $invoice->getEntityId());
