@@ -7,62 +7,69 @@ use \Magento\Framework\App\Config\ScopeConfigInterface as ScopeConfig;
 
 class PayStandConfigProvider implements ConfigProviderInterface
 {
+  
   /**
-   * @var \Magento\Framework\App\Config\ScopeConfigInterface
-   */
-    protected $scopeConfig;
-
+  * Method code
+  */
+  const CODE = 'paystandmagento';
+  
   /**
-   * publishable key config path
-   */
-    const PUBLISHABLE_KEY = 'payment/paystandmagento/publishable_key';
-
+  * @var \Magento\Framework\App\Config\ScopeConfigInterface
+  */
+  protected $scopeConfig;
+  
   /**
-   * client secret config path
-   */
-    const CUSTOMER_ID = 'payment/paystandmagento/customer_id';
-
+  * publishable key config path
+  */
+  const PUBLISHABLE_KEY = 'payment/paystandmagento/publishable_key';
+  
   /**
-   * client id config path
-   */
-    const CLIENT_ID = 'payment/paystandmagento/client_id';
-
+  * client secret config path
+  */
+  const CUSTOMER_ID = 'payment/paystandmagento/customer_id';
+  
   /**
-   * client secret config path
-   */
-    const CLIENT_SECRET = 'payment/paystandmagento/client_secret';
-
+  * client id config path
+  */
+  const CLIENT_ID = 'payment/paystandmagento/client_id';
+  
   /**
-   * use sandbox config path
-   */
-    const USE_SANDBOX = 'payment/paystandmagento/use_sandbox';
-
+  * client secret config path
+  */
+  const CLIENT_SECRET = 'payment/paystandmagento/client_secret';
+  
   /**
-   * @param ScopeConfig $scopeConfig
-   */
-    public function __construct(
-        ScopeConfig $scopeConfig
+  * use sandbox config path
+  */
+  const USE_SANDBOX = 'payment/paystandmagento/use_sandbox';
+  
+  /**
+  * @param ScopeConfig $scopeConfig
+  */
+  public function __construct(
+    ScopeConfig $scopeConfig
     ) {
-        $this->scopeConfig = $scopeConfig;
+      $this->scopeConfig = $scopeConfig;
     }
-  /**
-   * {@inheritdoc}
-   */
+    /**
+    * {@inheritdoc}
+    */
     public function getConfig()
     {
-        $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
-
-        $config = [
+      $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
+      
+      $config = [
         'payment' => [
-        'paystandmagento' => [
-          'publishable_key' => $this->scopeConfig->getValue(self::PUBLISHABLE_KEY, $storeScope),
-          'customer_id' => $this->scopeConfig->getValue(self::CUSTOMER_ID, $storeScope),
-          'client_id' => $this->scopeConfig->getValue(self::CLIENT_ID, $storeScope),
-          'client_secret' => $this->scopeConfig->getValue(self::CLIENT_SECRET, $storeScope),
-          'use_sandbox' => $this->scopeConfig->getValue(self::USE_SANDBOX, $storeScope)
-        ]
-        ]
+          'paystandmagento' => [
+              'publishable_key' => $this->scopeConfig->getValue(self::PUBLISHABLE_KEY, $storeScope),
+              'customer_id' => $this->scopeConfig->getValue(self::CUSTOMER_ID, $storeScope),
+              'client_id' => $this->scopeConfig->getValue(self::CLIENT_ID, $storeScope),
+              'client_secret' => $this->scopeConfig->getValue(self::CLIENT_SECRET, $storeScope),
+              'use_sandbox' => $this->scopeConfig->getValue(self::USE_SANDBOX, $storeScope)
+            ]
+          ]
         ];
         return $config;
-    }
-}
+        }
+      }
+      

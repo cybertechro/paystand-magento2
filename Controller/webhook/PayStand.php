@@ -208,8 +208,8 @@ class Paystand extends \Magento\Framework\App\Action\Action implements HttpPostA
                   ->save();
 
             // Create Transaction & invoice for the Order
-            $this->createTransaction($order,$request['resource']);
-            $this->createInvoice($order);
+            $transaction_id = $this->createTransaction($order,$request['resource']);
+            $invoice_id = $this->createInvoice($order, $transaction_id);
 
             // Send order confirmation email
             // $this->_orderConfirmEmail->sendEmail($order, \PayStand\PayStandMagento\Plugin\OrderConfirmEmail::ORDER_CONFIRM_TEMPLATE);
@@ -386,9 +386,12 @@ class Paystand extends \Magento\Framework\App\Action\Action implements HttpPostA
             $this->_logger->debug('>>>>> PAYSTAND-CREATE-TRANSACTION-START');
 
             $payment = $order->getPayment();
+
             $payment->setLastTransId($paymentData['id']);
             $payment->setTransactionId($paymentData['id']);
 
+            $order->setExtOrderId($paymentData['id']);
+            
             $payment->setAdditionalInformation([
                 \Magento\Sales\Model\Order\Payment\Transaction::RAW_DETAILS => $this->__paystandPaymentDataTransaction($paymentData),
                 'PAYSTAND_ORDER' =>  $this->__paystandPaymentDataOrder($paymentData)
@@ -412,6 +415,7 @@ class Paystand extends \Magento\Framework\App\Action\Action implements HttpPostA
                     'PAYSTAND_ORDER' =>  $this->__paystandPaymentDataOrder($paymentData)
                 ])
                 ->setFailSafe(true)
+                
                 //build method creates the transaction and returns the object
                 ->build(\Magento\Sales\Model\Order\Payment\Transaction::TYPE_CAPTURE);
 
@@ -430,7 +434,7 @@ class Paystand extends \Magento\Framework\App\Action\Action implements HttpPostA
 
             $this->_logger->debug('>>>>> PAYSTAND-CREATE-TRANSACTION-FINISH: transactionId: ' . $transactionId);
 
-            return  $transactionId;
+            return $transactionId;
 
         } catch (\Magento\Framework\Exception\AlreadyExistsException $e) {
             $this->_logger->debug('>>>>> PAYSTAND-EXCEPTION: ' . $e);
@@ -457,7 +461,7 @@ class Paystand extends \Magento\Framework\App\Action\Action implements HttpPostA
         ];
     }
 
-    private function createInvoice($order)
+    private function createInvoice($order, $transaction_id = null)
     {
         try {
 
@@ -481,6 +485,7 @@ class Paystand extends \Magento\Framework\App\Action\Action implements HttpPostA
 
                 $invoice = $this->_invoiceService->prepareInvoice($order);
                 $invoice->setRequestedCaptureCase(\Magento\Sales\Model\Order\Invoice::CAPTURE_ONLINE);
+                $invoice->setTransactionId($transaction_id);
                 $invoice->register();
 
                 $invoice->getOrder()->setCustomerNoteNotify(false);
