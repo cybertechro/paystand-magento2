@@ -23,12 +23,9 @@ class AfterOrderPlaceObserver implements ObserverInterface
         $payment = $order->getPayment();
 
         if ($payment->getMethod() == Directpost::METHOD_CODE) {
-            
             $order->addStatusHistoryComment('Order pending confirmation from paystand');
-
             // Do not change the order status here
             // // $order->setStatus('pending');
-
         }
         
     }

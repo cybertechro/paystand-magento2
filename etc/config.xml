@@ -10,15 +10,20 @@
                 <!--<merchant_email />-->
                 <model>PayStand\PayStandMagento\Model\Directpost</model>
                 <order_status>pending</order_status>
-                <!--<can_capture>0</can_capture>-->
                 <!--<can_authorize>0</can_authorize>-->
-                <!--<test>1</test>-->
                 <title>Paystand</title>
                 <payment_action>true</payment_action>
+                <can_refund_partial_per_invoice>1</can_refund_partial_per_invoice>
+                <can_refund>1</can_refund>
+                <can_void>0</can_void>
+                <can_cancel>1</can_cancel>
+                <can_edit>1</can_edit>
+                <can_fetch_transaction_info>1</can_fetch_transaction_info>
+                <can_fetch_transaction_information>1</can_fetch_transaction_information>
                 <!--<trans_key backend_model="Magento\Config\Model\Config\Backend\Encrypted" />-->
                 <!--<trans_md5 backend_model="Magento\Config\Model\Config\Backend\Encrypted" />-->
                 <!--<allowspecific>0</allowspecific>-->
-                <!--<currency>USD</currency>-->
+                <currency>USD</currency>
                 <create_order_before>1</create_order_before>
                 <can_use_internal>1</can_use_internal>
                 <!--<date_delim>/</date_delim>-->
