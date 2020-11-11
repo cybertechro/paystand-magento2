@@ -5,6 +5,8 @@
  use Magento\Framework\App\Config\ScopeConfigInterface;
  use Magento\Payment\Gateway\ConfigInterface;
  use Magento\Store\Model\ScopeInterface;
+ use Magento\Config\Model\ResourceModel\Config;
+ use Magento\Framework\App\Cache\TypeListInterface;
  use Magento\Framework\App\Config\Storage\WriterInterface;
  
  class GatewayConfigInterface implements ConfigInterface
@@ -17,14 +19,16 @@
  
      public function __construct(
          ScopeConfigInterface $scopeConfig,
-         WriterInterface $configWriter,
+         Config $resourceConfig,
+         TypeListInterface $cacheTypeList,
          $methodCode = "paystandmagento",
          $pathPattern = self::DEFAULT_PATH_PATTERN
      ) {
          $this->scopeConfig = $scopeConfig;
          $this->methodCode = $methodCode;
          $this->pathPattern = $pathPattern;
-         $this->configWriter = $configWriter;
+         $this->resourceConfig = $resourceConfig;
+         $this->cacheTypeList = $cacheTypeList;
      }
  
      public function setMethodCode($methodCode)
@@ -37,8 +41,10 @@
          $this->pathPattern = $pathPattern;
      }
  
-     public function getValue($field, $storeId = null)
+     public function getValue($field, $storeId = 0)
      {
+
+        $this->scopeConfig->clean();
          
          if ($this->methodCode === null || $this->pathPattern === null) {
              return null;
@@ -57,12 +63,14 @@
             return null;
         }
 
-        $result = $this->configWriter->save(
+        $result = $this->resourceConfig->saveConfig(
             sprintf($this->pathPattern, $this->methodCode, $field),
             $value, 
             ScopeInterface::SCOPE_STORE, 
             $storeId
         );
+
+        $this->cacheTypeList->cleanType(\Magento\Framework\App\Cache\Type\Config::TYPE_IDENTIFIER);
 
      }
 

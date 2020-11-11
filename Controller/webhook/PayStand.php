@@ -112,7 +112,7 @@ class Paystand extends \Magento\Framework\App\Action\Action implements HttpPostA
 
         $json = json_decode($body);
 
-        //$this->_logger->debug(">>>>> PAYSTAND-REQUEST-LIFECYCLE: " . $json->resource->status);
+        $this->_logger->debug(">>>>> PAYSTAND-REQUEST-LIFECYCLE: " . $json->resource->status);
         $this->_logger->debug(">>>>> PAYSTAND-REQUEST-RECEIVED: " . json_encode($json));
 
         // Verify the received event is a Paystand-Magento request
@@ -130,6 +130,7 @@ class Paystand extends \Magento\Framework\App\Action\Action implements HttpPostA
         $quoteId = $json->resource->meta->quote;
         $this->_logger->debug('>>>>> PAYSTAND-QUOTE: magento 2 webhook identified with quote id = ' . $quoteId);
         $quoteIdMask = $this->_quoteIdMaskFactory->create()->load($quoteId, 'masked_id');
+
         // If the quoteId is not masked, it comes from a logged in user and should be used as is.
         $id = (empty($quoteIdMask->getQuoteId())) ? $json->resource->meta->quote : $quoteIdMask->getQuoteId();
 
@@ -149,6 +150,7 @@ class Paystand extends \Magento\Framework\App\Action\Action implements HttpPostA
             $this->_logger->debug('>>>>> PAYSTAND-ERROR: Could not retrieve order from quoteId');
             $result->setHttpResponseCode(\Magento\Framework\Webapi\Exception::HTTP_NOT_FOUND);
             $result->setData(['error_message' => __('Could not retrieve order from quoteId')]);
+            sleep(5);
             return $result;
         }
 
@@ -197,7 +199,7 @@ class Paystand extends \Magento\Framework\App\Action\Action implements HttpPostA
         }
 
         // Only create transaction and invoice when the payment is on paid status to prevent multiple objects
-        if (in_array($json->resource->status, ['paid'])) {
+        if (in_array($json->resource->status, ['posted'])) { // was paid
 
             // Decode the body
             $request = json_decode($body, true);
@@ -211,13 +213,23 @@ class Paystand extends \Magento\Framework\App\Action\Action implements HttpPostA
             $transaction_id = $this->createTransaction($order,$request['resource']);
             $invoice_id = $this->createInvoice($order, $transaction_id);
 
-            // Send order confirmation email
+        // if the payiment is final
+        } elseif(in_array($json->resource->status, ['paid'])) {
+
+            $this->_logger->debug('>>>>> PAYSTAND-PAID: order is now in the paid status');
+            $result->setHttpResponseCode(\Magento\Framework\Webapi\Response::HTTP_OK);
+            $result->setData(['success_message' => __('Order is now in the paid status')]);
+
             // $this->_orderConfirmEmail->sendEmail($order, \PayStand\PayStandMagento\Plugin\OrderConfirmEmail::ORDER_CONFIRM_TEMPLATE);
 
         // If it's in created or processing or posted then discard
-        } elseif (in_array($json->resource->status, ['created', 'processing', 'posted'])) {
+        } elseif (in_array($json->resource->status, ['created', 'processing'])) {
 
             $this->_logger->debug('>>>>> PAYSTAND-FINISH: payment created, processing or paid, no need to update order');
+            
+            $order->addStatusHistoryComment('Order status changed to ' . $json->resource->status);
+            $order->save();
+            
             $result->setHttpResponseCode(\Magento\Framework\Webapi\Response::HTTP_OK);
             $result->setData(['success_message' => __('Event verified, payment created, processing or paid, no further action')]);
 
@@ -246,16 +258,10 @@ class Paystand extends \Magento\Framework\App\Action\Action implements HttpPostA
         );
 
         $result->setHttpResponseCode(\Magento\Framework\Webapi\Response::HTTP_OK);
-        $result->setData(
-            [
-                'success_message' => __('Event verified, order status changed'),
-                'order' => [
-                    'newState' => __($state),
-                    'newStatus' => __($status)
-                ]
-            ]
-        );
+        $result->setData(['success_message' => __('Event verified, order status changed'), 'order' => ['newState' => __($state), 'newStatus' => __($status)]]);
+
         return $result;
+        
     }
 
     private function buildCurl($curl, $verb, $body = "", $extheaders = null)
