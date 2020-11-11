@@ -77,7 +77,7 @@ class Gateway
 
             $token = $this->config->getValue('access_token');
 
-            if(!$token){
+            if(true){
 
                 $response = $this->post(self::AUTH_URL, [
                     'grant_type' => 'client_credentials',
@@ -92,6 +92,9 @@ class Gateway
                     $this->config->setValue('refresh_token', $response['refresh_token']);
                     $this->config->setValue('expires_in', $response['expires_in']);
                     $this->config->setValue('scope', $response['scope']);   
+
+                    print_r($response);
+                    exit();
                     
                     $token = $response['access_token'];
                     

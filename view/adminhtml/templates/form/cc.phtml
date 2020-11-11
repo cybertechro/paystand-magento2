@@ -1,13 +1,13 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
- */
+* Copyright © Magento, Inc. All rights reserved.
+* See COPYING.txt for license details.
+*/
 
 /**
- * @var \Magento\Payment\Block\Adminhtml\Transparent\Form $block
- * @var  $paymentConfig
- */
+* @var \Magento\Payment\Block\Adminhtml\Transparent\Form $block
+* @var  $paymentConfig
+*/
 
 //Get Object Manager Instance
 
@@ -17,123 +17,160 @@ $config = $block->getConfig();
 ?>
 
 <script>
-    // console.log(window.checkoutConfig);
+// console.log(window.checkoutConfig);
 </script>
 
 <fieldset class="admin__fieldset payment-method" style="display: none" id="payment_form_<?= /* @noEscape */ $code ?>">
-        <div class="actions-toolbar">
-            <div id="ps_checkout"></div>
-            <button id="paystand_button"
-                    class="open-checkout-button"
-                    style="background-color: rgb(0, 172, 238);color: white;border-radius: 5px;border:none;margin: 10px 0px;box-shadow: 0px 3px 7px -1px #8c8c8c;"
-            >Pay with Paystand
-            </button>
-        </div>
+<div class="actions-toolbar">
+<div id="ps_checkout"></div>
+<button type="button" id="paystand_button"
+class="open-checkout-button"
+style="background-color: rgb(0, 172, 238);color: white;border-radius: 5px;border:none;margin: 10px 0px;box-shadow: 0px 3px 7px -1px #8c8c8c;"
+>Pay with Paystand
+</button>
+</div>
 </fieldset>
 
 <script type="text/javascript">
 
-    require(
-        ['jquery', '<?=$block->sandbox('paystand-sandbox','paystand')?>', 'paystand-admin'],
+require(
+    ['jquery', '<?=$block->sandbox('paystand-sandbox','paystand')?>', 'paystand-admin'],
+    function($, paystand, paystand_admin) {
+        
+        $(document).ready(function(){
 
-        function($, paystand, paystand_admin) {
+            function checkOrderReady(){
 
-            function onClick(checkout){
-                $.ajax({
-                    beforeSend: function (request) {
-                        request.setRequestHeader("x-publishable-key", '<?=$config['publishable_key']?>');
-                    },
-                    method: 'GET',
-                    dataType: "text",
-                    contentType: "application/json; charset=utf-8",
-                    url: "https://<?=$block->sandbox('api.paystand.co','api.paystand.com')?>/v3/addresses/countries/iso?code=" + checkout.customer['order[billing_address][country_id]'],
-                    success: function (data) {
-                        checkout.countryISO3 = JSON.parse(data).iso3;
-                        initCheckout(checkout);
-                    },
-                    error: function (error) {
-                        console.error('Unable to get ISO3 code from PayStand!');
-                    },
-                });
+                if(window.order){
+                    
+                    window.order.submit2 = window.order.submit;
 
-            }
-
-            function initCheckout(checkout){
-
-                let config = {
-                    "publishableKey": '<?=$config['publishable_key']?>',
-                    "paymentAmount": checkout.price,
-                    "fixedAmount": true,
-                    "viewReceipt": "close",
-                    "viewCheckout": "mobile",
-                    "paymentCurrency": "USD",
-                    "payerName": checkout.customer["order[billing_address][firstname]"] + ' ' + checkout.customer["order[billing_address][lastname]"],
-                    "payerEmail": checkout.customer["order[account][email]"],
-                    "payerAddressCounty": checkout.countryISO3,
-                    "paymentMeta": {
-                        "source": "magento 2 - admin",
-                        "quote": checkout.quoteId,
-                        "quoteDetails": null
+                    window.order.submit = function(){
+                    
+                        let is_paystand_method = $("#p_method_paystandmagento").is(':checked');
+                        
+                        if(is_paystand_method){
+                            $("#paystand_button").trigger('click');
+                        } else {
+                            window.order.submit2();
+                        }
+                        
+                        return false;
+                        
                     }
-                };
-
-                if($("#edit_form").valid()){
-              
-                    // This block fixes the issue where checkout opens blank
-                    psCheckout.onReady(function () {
-
-                        // wait for reboot to complete before showing checkout
-                        psCheckout.onceLoaded(function (data) {
-                            psCheckout.showCheckout();
-                        });
-
-                        // reboot checkout with a new config
-                        psCheckout.reboot(config);
-
-                    });
-
-                    psCheckout.onComplete(function(data){
-                        $("#edit_form").trigger('processStart');
-                        $("#edit_form").trigger('submitOrder');
-                    });
-
-                    psCheckout.onError(function(data){
-                        alert('Error');
-                    });
-
-                    psCheckout.reboot(config);
-                    psCheckout.showCheckout();
 
                 } else {
-                    alert('The current form is invalid. Please check the data and try again')
-                };
-
+                    setTimeout(checkOrderReady, 1000);
+                }
             }
 
-            $("#paystand_button").click(function(e){
-
-                e.preventDefault();
-
-                let checkout = {};
-
-                checkout.order = window.order;
-                checkout.quoteId = order.quoteId;
-                checkout.customer = [];
-
-                checkout.price = parseFloat($(".order-tables > tfoot .col-price")
-                                .last()
-                                .text()
-                                .replace(order.currencySymbol,'')
-                                .replace(",",""));
-                                // check other locale
-
-                $("#edit_form").serializeArray().each(function(item){
-                    checkout.customer[item.name] = item.value;
-                });
-
-                onClick(checkout);
-
-            });
+            setTimeout(checkOrderReady, 1000);
 
         });
-</script>
+        
+        function onClick(checkout){
+            
+            $.ajax({
+                beforeSend: function (request) {
+                    request.setRequestHeader("x-publishable-key", '<?=$config['publishable_key']?>');
+                },
+                method: 'GET',
+                dataType: "text",
+                contentType: "application/json; charset=utf-8",
+                url: "https://<?=$block->sandbox('api.paystand.co','api.paystand.com')?>/v3/addresses/countries/iso?code=" + checkout.customer['order[billing_address][country_id]'],
+                success: function (data) {
+                    checkout.countryISO3 = JSON.parse(data).iso3;
+                    initCheckout(checkout);
+                },
+                error: function (error) {
+                    console.error('Unable to get ISO3 code from PayStand!');
+                },
+            });
+            
+        }
+        
+        function initCheckout(checkout){
+            
+            let config = {
+                "publishableKey": '<?=$config['publishable_key']?>',
+                "paymentAmount": checkout.price,
+                "fixedAmount": true,
+                "viewReceipt": "close",
+                "viewCheckout": "mobile",
+                "paymentCurrency": "USD",
+                "payerName": checkout.customer["order[billing_address][firstname]"] + ' ' + checkout.customer["order[billing_address][lastname]"],
+                "payerEmail": checkout.customer["order[account][email]"],
+                "payerAddressStreet": checkout.customer["order[billing_address][street][0]"],
+                "payerAddressCity": checkout.customer["order[billing_address][city]"],
+                "payerAddressPostal": checkout.customer["order[billing_address][postcode]"],
+                "payerAddressCounty": checkout.countryISO3,
+                "paymentMeta": {
+                    "source": "magento 2",
+                    "is_admin": "true",
+                    "quote": checkout.quoteId,
+                    "quoteDetails": {}
+                }
+            };
+
+            console.log(config);
+            
+            if($("#edit_form").valid()){
+                
+                // This block fixes the issue where checkout opens blank
+                psCheckout.onReady(function () {
+                    
+                    // wait for reboot to complete before showing checkout
+                    psCheckout.onceLoaded(function (data) {
+                        psCheckout.showCheckout();
+                    });
+                    
+                    // reboot checkout with a new config
+                    psCheckout.reboot(config);
+                    
+                });
+                
+                psCheckout.onComplete(function(data){
+                    $("#edit_form").trigger('processStart');
+                    $("#edit_form").trigger('submitOrder');
+                });
+                
+                psCheckout.onError(function(data){
+                    alert('Error');
+                });
+                
+                psCheckout.reboot(config);
+                psCheckout.showCheckout();
+                
+            } else {
+                alert('The current form is invalid. Please check the data and try again');
+            };
+            
+        }
+        
+        $("#paystand_button").click(function(e){
+            
+            e.preventDefault();
+            
+            let checkout = {};
+            
+            checkout.order = window.order;
+            checkout.quoteId = order.quoteId;
+            checkout.customer = [];
+            
+            checkout.price = parseFloat($(".order-tables > tfoot .col-price")
+            .last()
+            .text()
+            .replace(order.currencySymbol,'')
+            .replace(",",""));
+            // check other locale
+            
+            $("#edit_form").serializeArray().each(function(item){
+                checkout.customer[item.name] = item.value;
+            });
+            
+            onClick(checkout);
+            
+        });
+        
+    });
+    </script>

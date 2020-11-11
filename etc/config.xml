@@ -15,7 +15,7 @@
                 <payment_action>true</payment_action>
                 <can_refund_partial_per_invoice>1</can_refund_partial_per_invoice>
                 <can_refund>1</can_refund>
-                <can_void>1</can_void>
+                <can_void>0</can_void>
                 <can_cancel>1</can_cancel>
                 <can_edit>1</can_edit>
                 <can_fetch_transaction_info>1</can_fetch_transaction_info>
