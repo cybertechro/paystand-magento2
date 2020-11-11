@@ -112,7 +112,7 @@ class Paystand extends \Magento\Framework\App\Action\Action implements HttpPostA
 
         $json = json_decode($body);
 
-        //$this->_logger->debug(">>>>> PAYSTAND-REQUEST-LIFECYCLE: " . $json->resource->status);
+        $this->_logger->debug(">>>>> PAYSTAND-REQUEST-LIFECYCLE: " . $json->resource->status);
         $this->_logger->debug(">>>>> PAYSTAND-REQUEST-RECEIVED: " . json_encode($json));
 
         // Verify the received event is a Paystand-Magento request
@@ -130,6 +130,7 @@ class Paystand extends \Magento\Framework\App\Action\Action implements HttpPostA
         $quoteId = $json->resource->meta->quote;
         $this->_logger->debug('>>>>> PAYSTAND-QUOTE: magento 2 webhook identified with quote id = ' . $quoteId);
         $quoteIdMask = $this->_quoteIdMaskFactory->create()->load($quoteId, 'masked_id');
+
         // If the quoteId is not masked, it comes from a logged in user and should be used as is.
         $id = (empty($quoteIdMask->getQuoteId())) ? $json->resource->meta->quote : $quoteIdMask->getQuoteId();
 
@@ -149,6 +150,7 @@ class Paystand extends \Magento\Framework\App\Action\Action implements HttpPostA
             $this->_logger->debug('>>>>> PAYSTAND-ERROR: Could not retrieve order from quoteId');
             $result->setHttpResponseCode(\Magento\Framework\Webapi\Exception::HTTP_NOT_FOUND);
             $result->setData(['error_message' => __('Could not retrieve order from quoteId')]);
+            sleep(5);
             return $result;
         }
 
@@ -197,7 +199,7 @@ class Paystand extends \Magento\Framework\App\Action\Action implements HttpPostA
         }
 
         // Only create transaction and invoice when the payment is on paid status to prevent multiple objects
-        if (in_array($json->resource->status, ['paid'])) {
+        if (in_array($json->resource->status, ['paid'])) { // was posted
 
             // Decode the body
             $request = json_decode($body, true);
