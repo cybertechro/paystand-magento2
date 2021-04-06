@@ -158,6 +158,7 @@ class Paystand extends \Magento\Framework\App\Action\Action implements HttpPostA
         $state = $order->getState();
         $status = $order->getStatus();
         $remote_status = $json->resource->status ? $json->resource->status : null;
+        $source_type = $json->resource->sourceType ? $json->resource->sourceType : null;
 
         $this->_logger->debug(
             ">>>>> [LC: $remote_status] PAYSTAND-ORDER: current order id: {$order->getIncrementId()}, 
@@ -204,7 +205,11 @@ class Paystand extends \Magento\Framework\App\Action\Action implements HttpPostA
             // Decode the body
             $request = json_decode($body, true);
 
-            $order->addStatusHistoryComment('Paystand confirmed paid #' .  $order->getIncrementId())
+            $message = in_array($source_type,['Bank']) ? 
+                'Bank payment registerd as #' .  $order->getIncrementId() :
+                'Credit Card payment registred as #' .  $order->getIncrementId();
+
+            $order->addStatusHistoryComment($message)
                   ->setIsVisibleOnFront(true)
                   ->setIsCustomerNotified(true)
                   ->save();
@@ -215,6 +220,9 @@ class Paystand extends \Magento\Framework\App\Action\Action implements HttpPostA
 
         // if the payiment is final
         } elseif(in_array($json->resource->status, ['paid'])) {
+            
+            $order->addStatusHistoryComment('Payment confirmed settled #' .  $order->getIncrementId());
+            $order->save();
 
             $this->_logger->debug('>>>>> PAYSTAND-PAID: order is now in the paid status');
             $result->setHttpResponseCode(\Magento\Framework\Webapi\Response::HTTP_OK);
@@ -227,8 +235,8 @@ class Paystand extends \Magento\Framework\App\Action\Action implements HttpPostA
 
             $this->_logger->debug('>>>>> PAYSTAND-FINISH: payment created, processing or paid, no need to update order');
             
-            $order->addStatusHistoryComment('Order status changed to ' . $json->resource->status);
-            $order->save();
+            // $order->addStatusHistoryComment('Order status changed to ' . $json->resource->status);
+            // $order->save();
             
             $result->setHttpResponseCode(\Magento\Framework\Webapi\Response::HTTP_OK);
             $result->setData(['success_message' => __('Event verified, payment created, processing or paid, no further action')]);
