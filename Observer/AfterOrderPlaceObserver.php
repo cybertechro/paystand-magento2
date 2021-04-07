@@ -18,15 +18,13 @@ class AfterOrderPlaceObserver implements ObserverInterface
    */
     public function execute(\Magento\Framework\Event\Observer $observer)
     {
-        /** @var \Magento\Sales\Model\Order $order */
-        $order = $observer->getEvent()->getOrder();
-        $payment = $order->getPayment();
+        // $order = $observer->getEvent()->getOrder();
+        // $payment = $order->getPayment();
 
-        if ($payment->getMethod() == Directpost::METHOD_CODE) {
-            $order->addStatusHistoryComment('Order pending confirmation from paystand');
+        //if ($payment->getMethod() == Directpost::METHOD_CODE) {
+            // $order->addStatusHistoryComment('Order pending confirmation from paystand');
             // Do not change the order status here
-            // // $order->setStatus('pending');
-        }
-        
+            // $order->setStatus('pending');
+        //}
     }
 }
