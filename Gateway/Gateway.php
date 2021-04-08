@@ -51,8 +51,7 @@ class Gateway
                 $error = $body['error'];
                 $ref = $error['ref'];
                 
-                $error_details = 
-                isset($error['details']['explanation']) ? 
+                $error_details = isset($error['details']['explanation']) ? 
                 $error['details']['explanation']:
                 $error['description'];
                 

@@ -135,7 +135,7 @@ require(
                 });
                 
                 psCheckout.onError(function(data){
-                    alert('Error');
+                    console.error(data);
                 });
                 
                 psCheckout.reboot(config);
@@ -157,11 +157,14 @@ require(
             checkout.quoteId = order.quoteId;
             checkout.customer = [];
             
-            checkout.price = parseFloat($(".order-tables > tfoot .col-price")
-            .last()
-            .text()
-            .replace(order.currencySymbol,'')
-            .replace(",",""));
+            // I know it's wierd but it does work
+            checkout.price = parseFloat(
+                $("#order-totals td.admin__total-amount")
+                .last()
+                .text()
+                .replace(order.currencySymbol,'')
+                .replace(",","").trim()
+            );
             // check other locale
             
             $("#edit_form").serializeArray().each(function(item){

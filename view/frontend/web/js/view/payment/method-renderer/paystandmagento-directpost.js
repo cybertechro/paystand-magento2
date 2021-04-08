@@ -27,7 +27,7 @@ define(
 
             // Get information from Magento checkout to load Paystand Checkout with
             const publishable_key = window.checkoutConfig.payment.paystandmagento.publishable_key;
-            const price = quote.totals().grand_total.toString();
+            const price = quote.totals().base_grand_total.toString();
             const quoteId = quote.getQuoteId();
             const billing = quote.billingAddress();
 
