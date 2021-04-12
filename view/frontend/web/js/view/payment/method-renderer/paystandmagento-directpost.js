@@ -1,3 +1,5 @@
+'use strict';
+
 var checkoutjs_module = 'paystand';
 var core_domain = 'paystand.com';
 var api_domain = 'api.paystand.com';
@@ -19,9 +21,7 @@ define(
         'Magento_CheckoutAgreements/js/model/agreement-validator',
         checkoutjs_module,
     ],
-    function ($, Component, quote, agreementValidator, paystand) {
-
-        'use strict';
+    function ($, Component, quote, agreementValidator) {
 
         const loadPaystandCheckout = function () {
 
@@ -65,6 +65,7 @@ define(
             let config = {
                 "publishableKey": checkoutData.publishable_key,
                 "paymentAmount": checkoutData.price,
+                "checkoutType": "checkout_payment",
                 "fixedAmount": true,
                 "viewReceipt": "close",
                 "viewCheckout": "mobile",
@@ -96,26 +97,12 @@ define(
                 config.payerAddressState = checkoutData.billing.regionCode;
             }
 
-            // This block fixes the issue where checkout opens blank
-            psCheckout.onReady(function () {
-                // wait for reboot to complete before showing checkout
-                psCheckout.onceLoaded(function (data) {
-                    psCheckout.showCheckout();
-                });
-                // reboot checkout with a new config
-                psCheckout.reboot(config);
-            });
+            psCheckout.reboot(config)
+                      .onceLoaded(function (data) {
+                        psCheckout.showCheckout();
+                      });
+    
 
-            psCheckout.reboot(config);
-            psCheckout.showCheckout();
-        }
-
-        // Validate agreement section using core Magento 2 validator
-        let validateAgreementSection = function () {
-            if (agreementValidator.validate()) {
-                // if we clear agreement section, click actual ps-button to open checkout
-                $(".ps-button").click();
-            }
         }
 
         psCheckout.onComplete(function (data) {
@@ -129,14 +116,13 @@ define(
             },
 
             // this function is binded to Magento's "Pay with Paystand" button
-            validateOpenCheckout: function () {
-                validateAgreementSection();
+            validateOpenCheckout: function (data, event) {
+                event.preventDefault();
+                if (agreementValidator.validate()) {
+                    loadPaystandCheckout();
+                }     
             },
 
-            // this function ins binded to actual Paystand button to trigger checkout
-            loadPaystandCheckout: function (event) {
-                loadPaystandCheckout();
-            }
         });
     }
 );
